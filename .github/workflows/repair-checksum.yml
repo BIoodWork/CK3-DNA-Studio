@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   checksum:
-    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Fix release build: checksum filenames'
+    if: "github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Fix release build: checksum filenames'"
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
