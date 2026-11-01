@@ -6,7 +6,8 @@ $expected=$env:GITHUB_SHA
 $root=(git rev-list --max-parents=0 HEAD).Trim()
 $count=[int](git rev-list --count HEAD)
 $message=(git log -1 --format=%s).Trim()
-$rewriteRoot=($root -eq 'dfbb25a0bbf058a00489ab86f3d5c7ba04301a7a' -and $count -eq 2)
+$rootMessage=(git log --reverse --format=%s | Select-Object -First 1)
+$rewriteRoot=($count -eq 2 -and $rootMessage -eq 'Initialize Studio repository with private-data exclusions' -and $message -eq 'Publish Crusader Kings III DNA Studio 1.0.1')
 $rewriteHead=($message -like 'Fix release build:*' -and (git log -1 --format=%ae).Trim() -notmatch '@users\.noreply\.github\.com$')
 if($rewriteRoot -or $rewriteHead){
  git config user.name BIoodWork

@@ -48,6 +48,11 @@ async function main() {
   const asset = await response.json();
   if (asset.size !== bytes.length) throw new Error('Uploaded asset length differs; draft retained.');
   if (asset.digest !== 'sha256:' + crypto.createHash('sha256').update(bytes).digest('hex')) throw new Error('Uploaded asset checksum differs; draft retained.');
+  if (file === setup) {
+   const publishedName = asset.name || setupName;
+   if (/[\r\n\\/]/.test(publishedName)) throw new Error('Unexpected published installer filename.');
+   fs.writeFileSync(sums, checksum + '  ' + publishedName + '\n');
+  }
  }
  const published = await api(prefix + '/releases/' + release.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ draft: false }) });
  console.log('Published ' + published.html_url);

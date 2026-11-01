@@ -16,6 +16,7 @@ concurrency:
 
 jobs:
   release:
+    if: github.event.head_commit.message != 'Fix release build: checksum filenames'
     runs-on: windows-latest
     permissions:
       contents: write
