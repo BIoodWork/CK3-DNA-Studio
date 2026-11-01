@@ -1,0 +1,23 @@
+node_modules/
+dist/
+out/
+build/
+__pycache__/
+*.py[cod]
+*.log
+backend/runtime/
+
+# Local libraries, settings, exports and test profiles must never be committed.
+dna-library.json
+ui-language.json
+installation-paths.json
+portraits/
+*.ck3dna
+*test-profile*/
+*qa-profile*/
+.env
+.env.*
+!.env.example
+*.pem
+*.pfx
+*.p12

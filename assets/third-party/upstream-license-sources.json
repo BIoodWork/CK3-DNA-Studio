@@ -1,0 +1,45 @@
+{
+  "note": "Upstream license texts retained without changing their terms; line endings and trailing blank lines may be normalized.",
+  "files": [
+    {
+      "file": "bzip2-LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/python/cpython-source-deps/bzip2-1.0.8/LICENSE"
+    },
+    {
+      "file": "XZ-COPYING.txt",
+      "url": "https://raw.githubusercontent.com/python/cpython-source-deps/xz-5.2.5/COPYING"
+    },
+    {
+      "file": "Zstandard-LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/python/cpython-source-deps/zstd-1.5.7/LICENSE"
+    },
+    {
+      "file": "zlib-ng-LICENSE.md",
+      "url": "https://raw.githubusercontent.com/python/cpython-source-deps/zlib-ng-2.2.4/LICENSE.md"
+    },
+    {
+      "file": "libffi-LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/python/cpython-source-deps/libffi-3.4.4/LICENSE"
+    },
+    {
+      "file": "OpenSSL-LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/python/cpython-source-deps/openssl-3.0.18/LICENSE.txt"
+    },
+    {
+      "file": "StdUtils-LGPL.txt",
+      "url": "https://raw.githubusercontent.com/lordmulder/stdutils/1.14/LGPL.txt"
+    },
+    {
+      "file": "StdUtils-LGPL-CLARIFICATION.txt",
+      "url": "https://raw.githubusercontent.com/lordmulder/stdutils/1.14/LGPL_CLARIFICATION.txt"
+    },
+    {
+      "file": "StdUtils-rhash-COPYING.txt",
+      "url": "https://raw.githubusercontent.com/lordmulder/stdutils/1.14/Contrib/StdUtils/src/rhash/COPYING.txt"
+    },
+    {
+      "file": "StdUtils-blake2-COPYING.txt",
+      "url": "https://raw.githubusercontent.com/lordmulder/stdutils/1.14/Contrib/StdUtils/src/blake2/COPYING.txt"
+    }
+  ]
+}

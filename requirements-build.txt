@@ -1,0 +1,9 @@
+# Versions used for the reviewed Windows backend build (Python 3.14.3).
+Pillow==12.1.1
+PyInstaller==6.19.0
+pyinstaller-hooks-contrib==2026.3
+pefile==2024.8.26
+altgraph==0.17.5
+packaging==26.0
+pywin32-ctypes==0.2.3; sys_platform == "win32"
+setuptools==82.0.1

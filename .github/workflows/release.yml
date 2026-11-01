@@ -1,0 +1,61 @@
+name: Windows installer release
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: studio-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Prepare public commit identity
+        run: ./scripts/prepare-public-identity.ps1
+        shell: pwsh
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14.3'
+      - name: Install development dependencies
+        run: |
+          npm ci
+          python -m pip install -r requirements-build.txt
+      - name: Check Node regressions
+        run: npm run test -- --node
+      - name: Check Python regressions with isolated fixtures
+        run: |
+          python -m unittest discover -s tests/python -p test_live_game.py -v
+          python -m unittest discover -s tests/python -p test_library_compat.py -v
+      - name: Build bundled backend and installer
+        run: |
+          $env:CK3_CONVERTER_PYTHON = (Get-Command python).Source
+          npm run build:backend
+          python scripts/privacy-backend-audit.py --self-test
+        shell: pwsh
+      - name: Audit backend and package installer
+        run: |
+          python scripts/privacy-backend-audit.py
+          node scripts/build-windows.js --skip-backend
+        shell: pwsh
+      - name: Publish verified assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/publish-release.js
+

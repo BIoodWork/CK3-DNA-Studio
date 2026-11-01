@@ -1,0 +1,100 @@
+[
+  {
+    "file": "CPython-LICENSE.txt",
+    "component": "CPython",
+    "version": "3.14.3",
+    "origin": "Official CPython Windows installation: LICENSE.txt",
+    "sha256": "935cf13e19f8c31b497d20b05d73623431a226b230c3599bc30fa3348979bc68"
+  },
+  {
+    "file": "CPython-THIRD-PARTY-LICENSES.rst.txt",
+    "component": "CPython standard library/native extensions",
+    "version": "3.14.3",
+    "origin": "Official CPython documentation: license.rst",
+    "sha256": "ebbbf1b21cf1d27ebc0cf7e74971728238252a7ba52a7a2abe1e73f444e3f864"
+  },
+  {
+    "file": "Pillow-LICENSE",
+    "component": "Pillow",
+    "version": "12.1.1",
+    "origin": "Installed Pillow distribution license text",
+    "sha256": "926df5f888a7337fd4126a435202edf2847312be81a167df91a6d70cfa3f2ed3"
+  },
+  {
+    "file": "PyInstaller-COPYING.txt",
+    "component": "PyInstaller",
+    "version": "6.19.0",
+    "origin": "Installed PyInstaller distribution license text",
+    "sha256": "dcf75fdb959db1e3b41c0f8505069d2ece781b5ec6b3d0a4d30975cfc6580245"
+  },
+  {
+    "file": "PyInstaller-hooks-LICENSE",
+    "component": "pyinstaller-hooks-contrib",
+    "version": "2026.3",
+    "origin": "Installed pyinstaller-hooks-contrib distribution license text",
+    "sha256": "91d0baaff00773038e72c0a1fc9d5d2d38706b7a2b9c04f34296608f931b9cd0"
+  },
+  {
+    "file": "build-tools/pefile-LICENSE",
+    "component": "pefile",
+    "version": "2024.8.26",
+    "origin": "Installed pefile distribution license text",
+    "sha256": "b44409c067c6da52bfb54bb6624fb11a7b52157c3a13ae1400232f8196e86ad3"
+  },
+  {
+    "file": "build-tools/altgraph-LICENSE",
+    "component": "altgraph",
+    "version": "0.17.5",
+    "origin": "Installed altgraph distribution license text",
+    "sha256": "6c194d6db0c64d45535d10c95142b9b0cda7b7dcc7f1ddee302b3d536f3dbe46"
+  },
+  {
+    "file": "build-tools/packaging-LICENSE",
+    "component": "packaging",
+    "version": "26.0",
+    "origin": "Installed packaging distribution license text",
+    "sha256": "cad1ef5bd340d73e074ba614d26f7deaca5c7940c3d8c34852e65c4909686c48"
+  },
+  {
+    "file": "build-tools/packaging-LICENSE.APACHE",
+    "component": "packaging",
+    "version": "26.0",
+    "origin": "Installed packaging distribution license text",
+    "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+  },
+  {
+    "file": "build-tools/packaging-LICENSE.BSD",
+    "component": "packaging",
+    "version": "26.0",
+    "origin": "Installed packaging distribution license text",
+    "sha256": "b70e7e9b742f1cc6f948b34c16aa39ffece94196364bc88ff0d2180f0028fac5"
+  },
+  {
+    "file": "build-tools/pywin32-ctypes-LICENSE.txt",
+    "component": "pywin32-ctypes",
+    "version": "0.2.3",
+    "origin": "Installed pywin32-ctypes distribution license text",
+    "sha256": "dfa83b3e2709adfcdb838d9ad55823ca674abb780e60563d9dd9544ccbf785e9"
+  },
+  {
+    "file": "build-tools/setuptools-LICENSE",
+    "component": "setuptools",
+    "version": "82.0.1",
+    "origin": "Installed setuptools distribution license text",
+    "sha256": "86da0f01aeae46348a3c3d465195dc1ceccde79f79e87769a64b8da04b2a4741"
+  },
+  {
+    "file": "Electron-LICENSE.txt",
+    "component": "Electron",
+    "version": "36.9.5",
+    "origin": "Official Electron runtime: LICENSE",
+    "sha256": "5154e165bd6c2cc0cfbcd8916498c7abab0497923bafcd5cb07673fe8480087d"
+  },
+  {
+    "file": "Lucide-Feather-LICENSE.txt",
+    "component": "Lucide and Feather icons",
+    "version": "see preserved upstream notices",
+    "origin": "Vendored Lucide license file",
+    "sha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57"
+  }
+]

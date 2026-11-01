@@ -1,0 +1,78 @@
+{
+  "name": "ck3-dna-studio",
+  "version": "1.0.1",
+  "description": "Edit, convert and manage character DNA for Crusader Kings III.",
+  "author": "BIoodWork",
+  "private": true,
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:backend": "node scripts/build-python-backend.js",
+    "postbuild:artifacts": "node scripts/cleanup-release-artifacts.js",
+    "pack": "node scripts/build-windows.js --dir",
+    "dist": "node scripts/build-windows.js",
+    "dist:dir": "node scripts/build-windows.js --dir",
+    "test": "node scripts/test.js"
+  },
+  "build": {
+    "appId": "com.ck3dnastudio.desktop",
+    "productName": "Crusader Kings III DNA Studio",
+    "executableName": "Crusader Kings III DNA Studio",
+    "asar": true,
+    "artifactName": "${productName} Setup ${version}.${ext}",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json",
+      "!**/__pycache__/**/*",
+      "!**/*.pyc"
+    ],
+    "extraResources": [
+      {
+        "from": "backend/runtime/win-x64",
+        "to": "backend/runtime",
+        "filter": [
+          "ck3-dna-bridge.exe"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "verifyUpdateCodeSignature": false
+    },
+    "nsis": {
+      "language": "1033",
+      "installerLanguages": [
+        "en_US",
+        "de_DE"
+      ],
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Crusader Kings III DNA Studio",
+      "uninstallDisplayName": "Crusader Kings III DNA Studio",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "artifactName": "${productName} Setup ${version}.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "^36.2.1",
+    "electron-builder": "^26.0.12"
+  },
+  "license": "MIT"
+}

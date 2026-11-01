@@ -1,0 +1,2 @@
+# Development and packaging use the same reviewed dependency versions.
+-r requirements-build.txt
