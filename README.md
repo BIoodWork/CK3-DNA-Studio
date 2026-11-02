@@ -6,6 +6,12 @@ Edit, convert and manage character DNA for **Vanilla, EPE and AGOT** in a local 
 
 [Download the latest release](https://github.com/BIoodWork/CK3-DNA-Studio/releases/latest)
 
+## macOS alpha
+
+A community-test macOS alpha is available for **Apple Silicon and Intel**. See the [alpha release](https://github.com/BIoodWork/CK3-DNA-Studio/releases/tag/macos-v1.1.0-alpha.1) for DMG/ZIP downloads, installation and known limitations. **CK3 Gateway remains Windows-only.**
+
+The alpha source is on the [`macos-alpha` branch](https://github.com/BIoodWork/CK3-DNA-Studio/tree/macos-alpha). The stable Windows release is unchanged.
+
 ## Getting started
 
 1. Download the Windows installer from the release page and install Studio. The installer is unsigned, so Windows may display a publisher or reputation warning.
