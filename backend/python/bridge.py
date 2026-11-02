@@ -26,6 +26,8 @@ def dispatch(payload: dict) -> dict:
         if action == "studio_palette":
             return studio_palette(payload.get("profile"), payload.get("gene"))
         return studio_encode(payload.get("text", ""), payload.get("profile"), payload.get("genes", []), payload.get("targetFormat"))
+    if sys.platform != "win32" and action in {"game_status", "game_copy", "game_paste", "library_check", "library_apply"}:
+        return {"ready": False, "compatible": False, "platformUnsupported": True, "message": "CK3 Gateway is available on Windows only. On macOS, copy DNA from the DNA Code tab into CK3 Ruler Designer."}
     if action in {"library_check", "library_apply"}:
         from library_compat import handle_library
         return handle_library(action, payload)

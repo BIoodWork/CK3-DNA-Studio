@@ -8,15 +8,9 @@ const python = findPython(["PyInstaller", "PIL"]);
 
 const PROJECT_DIR = path.resolve(__dirname, "..");
 const SPEC_PATH = path.join(PROJECT_DIR, "backend", "python", "bridge.spec");
-const DIST_PATH = path.join(PROJECT_DIR, "backend", "runtime", "win-x64");
+const DIST_PATH = path.join(PROJECT_DIR, "backend", "runtime", process.platform === "darwin" ? `mac-${process.arch}` : "win-x64");
 const WORK_PATH = path.join(PROJECT_DIR, "build", "pyinstaller");
-const OUTPUT_EXE = path.join(
-  PROJECT_DIR,
-  "backend",
-  "runtime",
-  "win-x64",
-  "ck3-dna-bridge.exe"
-);
+const OUTPUT_EXE = path.join(DIST_PATH, process.platform === "darwin" ? "ck3-dna-bridge" : "ck3-dna-bridge.exe");
 
 const result = spawnSync(
   python.command,

@@ -9,7 +9,7 @@ function findPython(modules = ['PIL']) {
       const folder = path.join(local, 'Python');
       if (fs.existsSync(folder)) for (const name of fs.readdirSync(folder).filter(n => /^pythoncore-/i.test(n)).sort().reverse()) candidates.push({ command: path.join(folder, name, 'python.exe'), args: [] });
     }
-    candidates.push({ command: 'python', args: [] }, { command: 'py', args: ['-3'] });
+    candidates.push({ command: 'python3', args: [] }, { command: 'python', args: [] }, { command: 'py', args: ['-3'] });
   }
   for (const candidate of candidates) {
     const probe = spawnSync(candidate.command, [...candidate.args, '-c', "import sys; assert sys.version_info >= (3,10); " + modules.map(name => 'import ' + name).join('; ')], { encoding: 'utf8', timeout: 10000, windowsHide: true });

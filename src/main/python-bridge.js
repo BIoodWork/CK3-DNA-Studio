@@ -17,8 +17,8 @@ function startBackend() {
   if (stopping) throw new Error("Die App wird beendet.");
   if (restarting) throw new Error("The installation paths are being updated. Please try again shortly.");
   if (child) return child;
-  const executable = app.isPackaged ? path.join(process.resourcesPath, "backend/runtime/ck3-dna-bridge.exe")
-    : (process.env.CK3_CONVERTER_PYTHON || "python");
+  const executable = app.isPackaged ? path.join(process.resourcesPath, "backend/runtime", process.platform === "darwin" ? "ck3-dna-bridge" : "ck3-dna-bridge.exe")
+    : (process.env.CK3_CONVERTER_PYTHON || (process.platform === "darwin" ? "python3" : "python"));
   const args = app.isPackaged ? ["--server"] : [path.resolve(__dirname, "../../backend/python/bridge.py"), "--server"];
   const instance = spawn(executable, args, { windowsHide: true, stdio: ["pipe", "pipe", "pipe"] });
   child = instance; output = ""; lastError = "";

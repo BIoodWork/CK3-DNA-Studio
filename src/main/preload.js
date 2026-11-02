@@ -10,6 +10,7 @@ async function invoke(channel, ...args) {
 }
 
 contextBridge.exposeInMainWorld("desktopApp", {
+  platform: process.platform,
   getLanguage: () => invoke("settings:get-language"),
   getVersion: () => invoke("app:version"),
   setLanguage: (language) => invoke("settings:set-language", language),

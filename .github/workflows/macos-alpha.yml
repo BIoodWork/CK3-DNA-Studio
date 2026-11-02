@@ -1,0 +1,116 @@
+name: macOS alpha packages
+on:
+  push:
+    branches: [macos-alpha]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: macos-alpha-release
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      commit: ${{ steps.identity.outputs.commit }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Use the public author identity for the automation-created alpha commit
+        id: identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = 'BIoodWork/CK3-DNA-Studio'
+          test "$GITHUB_REF" = 'refs/heads/macos-alpha'
+          test "$GITHUB_ACTOR" = 'BIoodWork'
+          case "$(git log -1 --format=%s)" in
+            'Add native macOS alpha packaging, platform guards and restart smoke tests'|'Fix macOS alpha:'*) ;;
+            *) echo 'Unexpected commit; no identity changes made.'; exit 1 ;;
+          esac
+          head=$(git rev-parse HEAD)
+          if test "$(git log -1 --format=%ae)" != '351165458+BIoodWork@users.noreply.github.com'; then
+            export GIT_AUTHOR_NAME='BIoodWork'
+            export GIT_AUTHOR_EMAIL='351165458+BIoodWork@users.noreply.github.com'
+            export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
+            export GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
+            clean=$(git log -1 --format=%B | git commit-tree "HEAD^{tree}" -p HEAD^)
+            git push --force-with-lease="refs/heads/macos-alpha:$head" origin "$clean:refs/heads/macos-alpha"
+            head=$clean
+          fi
+          echo "commit=$head" >> "$GITHUB_OUTPUT"
+  build:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14.3'
+      - name: Install pinned build dependencies
+        run: |
+          npm ci
+          python -m pip install -r requirements-build.txt
+      - name: Test library and platform-independent logic
+        run: |
+          npm test -- --node
+          mkdir -p tests/python/tmp
+          python -m unittest discover -s tests/python -p test_live_game.py -v
+          python -m unittest discover -s tests/python -p test_library_compat.py -v
+          python -m unittest discover -s tests/python -p test_macos.py -v
+      - name: Build native backend, app, DMG and ZIP
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npm run dist:mac
+      - name: Smoke test the packaged app and bundled backend
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+          node scripts/smoke-macos.js
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}
+          path: |
+            dist/*.dmg
+            dist/*.zip
+          if-no-files-found: error
+          retention-days: 14
+  publish:
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: macos-*
+          merge-multiple: true
+          path: dist
+      - name: Publish macOS prerelease without touching Windows stable
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STUDIO_RELEASE_COMMIT: ${{ needs.prepare.outputs.commit }}
+        run: node scripts/publish-macos-release.js
+

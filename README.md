@@ -2,7 +2,11 @@
 
 Edit, convert and manage character DNA for **Vanilla, EPE and AGOT** in a local Windows desktop app.
 
-**Version 1.0.1 · Windows x64 · English and German**
+**macOS development branch · 1.1.0-alpha.1 · Apple Silicon and Intel**
+
+The stable Windows release remains **1.0.1** on `main`.
+
+See [macOS Alpha notes](MACOS_ALPHA.md) for downloads, installation, limitations and feedback.
 
 [Download the latest release](https://github.com/BIoodWork/CK3-DNA-Studio/releases/latest)
 

@@ -2,6 +2,11 @@
 (() => {
 const copy = Object.fromEntries(`
 subtitle|Edit, convert and manage character DNA|Charakter-DNA bearbeiten, konvertieren und verwalten
+loadingLibrary|Loading your library…|Bibliothek wird geladen…
+libraryLoadFailed|The library could not be loaded. Your saved data has not been removed.|Die Bibliothek konnte nicht geladen werden. Deine gespeicherten Daten wurden nicht entfernt.
+retryLibrary|Try again|Erneut versuchen
+macGatewayTitle|Direct game access is not available in the macOS alpha|Direkter Spielzugriff ist in der macOS-Alpha nicht verfügbar
+macGatewayHelp|Use DNA Code to copy or export Ruler Designer text and paste it into CK3. Library, gene editing and conversion work with your installed game and mod definitions.|Kopiere oder exportiere den Ruler-Designer-Text unter DNA-Code und füge ihn in CK3 ein. Bibliothek, Gen-Editor und Konvertierung verwenden deine installierten Spiel- und Moddefinitionen.
 language|Language|Sprache
 library|Library|Bibliothek
 edit|Edit DNA|DNA bearbeiten

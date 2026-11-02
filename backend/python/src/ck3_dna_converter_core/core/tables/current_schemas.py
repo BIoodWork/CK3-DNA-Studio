@@ -14,6 +14,7 @@ import hashlib
 import json
 import os
 import re
+import sys
 
 _TOKEN = re.compile(r'#[^\n]*|"(?:\\.|[^"\\])*"|[{}=]|[^\s{}=#]+')
 _GROUPS = {'color_genes', 'morph_genes', 'accessory_genes'}
@@ -89,11 +90,30 @@ class CurrentSchema:
                 for gene in ('hair_color', 'skin_color', 'eye_color')}
 
 
+def _steam_libraries():
+    """Default Steam roots plus explicit libraryfolders.vdf paths; no disk-wide scan."""
+    if sys.platform == 'darwin':
+        roots = [Path.home()/'Library/Application Support/Steam']
+    else:
+        roots = [Path(p) for p in ['C:/Program Files (x86)/Steam', 'C:/SteamLibrary', 'D:/SteamLibrary', 'E:/SteamLibrary', 'F:/SteamLibrary']]
+    libraries = list(roots)
+    for root in roots:
+        try:
+            text = (root/'steamapps/libraryfolders.vdf').read_text(encoding='utf-8-sig')
+            for raw in re.findall(r'"path"\s*"([^"\n]+)"', text):
+                folder = Path(raw.replace(chr(92)*2, chr(92)))
+                if folder.is_absolute() and folder not in libraries:
+                    libraries.append(folder)
+        except (OSError, UnicodeError):
+            pass
+    return libraries
+
+
 def _genes_dirs(mode):
     base = os.environ.get('CK3_GENES_DIR')
     if not base:
         candidates = []
-        for root in ['C:/Program Files (x86)/Steam', 'C:/SteamLibrary', 'D:/SteamLibrary', 'E:/SteamLibrary', 'F:/SteamLibrary']:
+        for root in _steam_libraries():
             candidates.append(Path(root)/'steamapps/common/Crusader Kings III/game/common/genes')
         base = next((p for p in candidates if p.is_dir()), None)
     if not base or not Path(base).is_dir(): raise ValueError('Installed CK3 gene definitions were not found. Set CK3_GENES_DIR to game/common/genes.')
@@ -105,7 +125,7 @@ def _genes_dirs(mode):
     for ancestor in base.parents:
         if ancestor.name.lower() == 'steamapps':
             candidates.append(ancestor/'workshop/content/1158310'/_MOD_IDS[mode]/'common/genes')
-    for root in ['C:/Program Files (x86)/Steam', 'C:/SteamLibrary', 'D:/SteamLibrary', 'E:/SteamLibrary', 'F:/SteamLibrary']:
+    for root in _steam_libraries():
         candidates.append(Path(root)/'steamapps/workshop/content/1158310'/_MOD_IDS[mode]/'common/genes')
     mod = next((p.resolve() for p in candidates if p.is_dir()), None)
     if mod is None: raise ValueError(f'Installed {_LABELS[mode]} gene definitions were not found. Set CK3_{mode.upper()}_GENES_DIR to that mod\'s common/genes.')

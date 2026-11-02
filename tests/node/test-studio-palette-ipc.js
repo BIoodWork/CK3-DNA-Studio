@@ -25,6 +25,7 @@ test('sandboxed preload exposes only the dedicated palette request channel', asy
   const calls = [];
   const expected = { available: true, dataUrl: 'data:image/png;base64,example', width: 256, height: 256 };
   vm.runInNewContext(fs.readFileSync(path.resolve(__dirname, '../../src/main/preload.js'), 'utf8'), {
+    process: { platform: process.platform },
     require(name) {
       assert.equal(name, 'electron');
       return {
