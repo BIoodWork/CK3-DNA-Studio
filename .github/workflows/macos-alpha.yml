@@ -7,7 +7,7 @@ permissions:
   contents: read
 concurrency:
   group: macos-alpha-release
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   prepare:
     runs-on: ubuntu-latest
@@ -48,7 +48,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: macos-15
+          - runner: macos-14
             arch: arm64
           - runner: macos-15-intel
             arch: x64
@@ -113,4 +113,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           STUDIO_RELEASE_COMMIT: ${{ needs.prepare.outputs.commit }}
         run: node scripts/publish-macos-release.js
-

@@ -18,7 +18,7 @@ This alpha has an ad-hoc code signature, **not an Apple Developer ID signature o
 - Original DNA preservation; Studio library/profile import and export.
 - Gen editor and conversion for Vanilla, EPE and AGOT, using your locally installed definitions.
 - Base64 and Ruler Designer text; color palettes from the installed game/mod.
-- English and German UI. Native Apple Silicon and Intel runtimes.
+- English and German UI, native macOS edit menus and Command-key clipboard shortcuts. Native Apple Silicon and Intel runtimes.
 - Independent library loading with visible loading/error states and retry.
 
 **CK3 Gateway is Windows-only.** Reading or modifying a running CK3 character is unavailable on macOS. The alpha shows this explicitly and refuses game-memory requests. Copy Ruler Designer text from **DNA Code** into CK3 instead; that workflow creates or edits a character through the game's own designer, not an existing character mid-game.

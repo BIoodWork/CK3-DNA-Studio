@@ -51,7 +51,7 @@ async function child(profile, entryId) {
     static getAllWindows() { return []; }
   }
   const electron = {
-    app, BrowserWindow: Window, Menu: { setApplicationMenu() {} },
+    app, BrowserWindow: Window, Menu: { setApplicationMenu() {}, buildFromTemplate: template => template },
     nativeImage: { createFromPath: () => ({ isEmpty: () => true }) },
     ipcMain: { handle: (channel, handler) => handlers.set(channel, handler) }
   };

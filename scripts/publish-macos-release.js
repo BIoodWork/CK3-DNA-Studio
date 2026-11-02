@@ -16,6 +16,15 @@ async function main(){
  const release=await request(prefix+'/releases',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag_name:tag,target_commitish:commit,name:'Crusader Kings III DNA Studio '+version+' — macOS Alpha',body,draft:true,prerelease:true,make_latest:'false'})});
  for(const f of files){const bytes=fs.readFileSync(f);const r=await fetch(release.upload_url.replace(/\{.*$/,'')+'?name='+encodeURIComponent(path.basename(f)),{method:'POST',headers:{...headers,'Content-Type':'application/octet-stream'},body:bytes});if(!r.ok)throw Error('Asset upload failed: '+r.status+'; draft retained.');const asset=await r.json();if(asset.size!==bytes.length||asset.name!==path.basename(f)||asset.digest!=='sha256:'+digest(f))throw Error('Asset verification failed; draft retained.');}
  const result=await request(prefix+'/releases/'+release.id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({draft:false,make_latest:'false'})});console.log('Published '+result.html_url);
+ // Add a discoverable alpha link to the stable README without changing its code/version.
+ const readme=await request(prefix+'/contents/README.md?ref=main');
+ let text=Buffer.from(readme.content,'base64').toString('utf8');
+ if(!text.includes('## macOS alpha')){
+  text=text.replace('## Getting started','## macOS alpha\n\nA community-test macOS alpha is available for **Apple Silicon and Intel**. See the [alpha release]('+result.html_url+') for DMG/ZIP downloads, installation and known limitations. **CK3 Gateway remains Windows-only.**\n\nThe alpha source is on the [`macos-alpha` branch](https://github.com/'+repo+'/tree/macos-alpha). The stable Windows release is unchanged.\n\n## Getting started');
+  if(text===Buffer.from(readme.content,'base64').toString('utf8'))throw Error('README anchor changed; update documentation manually.');
+  const identity={name:'BIoodWork',email:'351165458+BIoodWork@users.noreply.github.com'};
+  await request(prefix+'/contents/README.md',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'Document macOS alpha downloads and Windows-only Gateway',branch:'main',sha:readme.sha,content:Buffer.from(text).toString('base64'),author:identity,committer:identity})});
+ }
+
 }
 main().catch(e=>{console.error(e.message);process.exitCode=1});
-

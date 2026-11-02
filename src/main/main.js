@@ -127,7 +127,7 @@ app.whenReady().then(async () => {
   if (process.platform === "win32") {
     app.setAppUserModelId("com.ck3dnastudio.desktop");
   }
-  Menu.setApplicationMenu(null);
+  Menu.setApplicationMenu(isMac ? Menu.buildFromTemplate([{ role: "appMenu" }, { role: "editMenu" }, { role: "windowMenu" }]) : null);
   languageSettings = new LanguageSettings(path.join(app.getPath("userData"), "ui-language.json"));
   await languageSettings.load();
   pathSettings = new PathSettings(path.join(app.getPath("userData"), "installation-paths.json"));
