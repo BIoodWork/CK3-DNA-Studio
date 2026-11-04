@@ -94,6 +94,8 @@ def _steam_libraries():
     """Default Steam roots plus explicit libraryfolders.vdf paths; no disk-wide scan."""
     if sys.platform == 'darwin':
         roots = [Path.home()/'Library/Application Support/Steam']
+    elif sys.platform.startswith('linux'):
+        roots = [Path.home()/p for p in ('.local/share/Steam', '.steam/steam', '.var/app/com.valvesoftware.Steam/.local/share/Steam', 'snap/steam/common/.local/share/Steam')]
     else:
         roots = [Path(p) for p in ['C:/Program Files (x86)/Steam', 'C:/SteamLibrary', 'D:/SteamLibrary', 'E:/SteamLibrary', 'F:/SteamLibrary']]
     libraries = list(roots)

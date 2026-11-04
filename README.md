@@ -8,6 +8,10 @@ The stable Windows release remains **1.0.1** on `main`.
 
 See [macOS Alpha notes](MACOS_ALPHA.md) for downloads, installation, limitations and feedback.
 
+## Linux
+
+Linux runs from source with Node.js and Python 3.10+ with Pillow: `npm ci`, then `npm start`. Native, Flatpak and Snap Steam installs and their additional libraries are discovered automatically; otherwise choose the folders in Settings. **CK3 Gateway is Windows-only.** Copy Ruler Designer text from **DNA Code** into CK3 instead.
+
 [Download the latest release](https://github.com/BIoodWork/CK3-DNA-Studio/releases/latest)
 
 ## Getting started
