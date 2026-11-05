@@ -1,4 +1,5 @@
 const { app } = require("electron");
+const fs = require("fs");
 const path = require("path");
 const { spawn } = require("child_process");
 let child = null;
@@ -17,9 +18,12 @@ function startBackend() {
   if (stopping) throw new Error("Die App wird beendet.");
   if (restarting) throw new Error("The installation paths are being updated. Please try again shortly.");
   if (child) return child;
-  const executable = app.isPackaged ? path.join(process.resourcesPath, "backend/runtime", process.platform === "darwin" ? "ck3-dna-bridge" : "ck3-dna-bridge.exe")
-    : (process.env.CK3_CONVERTER_PYTHON || (process.platform === "darwin" ? "python3" : "python"));
-  const args = app.isPackaged ? ["--server"] : [path.resolve(__dirname, "../../backend/python/bridge.py"), "--server"];
+  const bundled = app.isPackaged ? path.join(process.resourcesPath, "backend/runtime", process.platform === "win32" ? "ck3-dna-bridge.exe" : "ck3-dna-bridge") : null;
+  // Distro Electron wrappers can force isPackaged, so also require the bundled backend to exist.
+  const useBundled = bundled !== null && fs.existsSync(bundled);
+  const executable = useBundled ? bundled
+    : (process.env.CK3_CONVERTER_PYTHON || (process.platform === "win32" ? "python" : "python3"));
+  const args = useBundled ? ["--server"] : [path.resolve(__dirname, "../../backend/python/bridge.py"), "--server"];
   const instance = spawn(executable, args, { windowsHide: true, stdio: ["pipe", "pipe", "pipe"] });
   child = instance; output = ""; lastError = "";
   instance.stdout.setEncoding("utf8"); instance.stderr.setEncoding("utf8");

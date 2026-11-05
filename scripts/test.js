@@ -26,7 +26,7 @@ function pythonInterpreter() {
   const candidates = [];
   if (process.env.CK3_CONVERTER_PYTHON) candidates.push({ command: process.env.CK3_CONVERTER_PYTHON, args: [], explicit: true });
   else {
-    candidates.push({ command: "python", args: [] }, { command: "py", args: ["-3"] });
+    candidates.push({ command: "python3", args: [] }, { command: "python", args: [] }, { command: "py", args: ["-3"] });
     const localDirectories = new Set([process.env.LOCALAPPDATA, process.platform === "win32" ? path.join(os.homedir(), "AppData", "Local") : null].filter(Boolean));
     for (const localAppData of localDirectories) {
       const directory = path.join(localAppData, "Python");
