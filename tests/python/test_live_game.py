@@ -16,7 +16,7 @@ class Memory:
     def __init__(self):
         self.base=0x140000000;self.pid=42;self.cells={};self.writes=[];self.reads=[];self.mode=None;self.closed=False
         b=self.base
-        self.put(b,b'MZ');self.u32(b+0x3c,0x158);self.put(b+0x158,b'PE\0\0');self.u32(b+0x160,0x6ad5e20c);self.u32(b+0x1a8,0x61da000)
+        self.put(b,b'MZ');self.u32(b+0x3c,0x158);self.put(b+0x158,b'PE\0\0\x64\x86');self.put(b+0x170,b'\x0b\x02');self.u32(b+0x160,0x6ad5e20c);self.u32(b+0x1a8,0x61da000)
         self.put(b+0xe764c9,bytes.fromhex('41 8b 40 18 49 8b e8 48 8b fa 4c 8b f1 39 41 18'))
         self.put(b+0xc922e9,bytes.fromhex('48 81 c1 60 01 00 00'))
         self.app=0x200000;holder=0x210000;interface=0x220000;context=0x230000;self.window=0x240000;self.db=0x250000;self.array=0x260000
@@ -63,18 +63,49 @@ class Tests(unittest.TestCase):
         m=Memory();g=live.LiveGame(m);self.target=g.status();return m,g
     def expected(self):return {k:self.target[k] for k in ('pid','id','selectionToken')}
     def changed(self,m):return base64.b64encode(bytes(v^1 for v in m.original)).decode()
-    def test_build_guard(self):
-        m,g=self.world();g.verify_build();m.u32(m.base+0x160,0)
-        with self.assertRaisesRegex(live.LiveGameError,'nicht geprüft'):g.verify_build()
-        self.assertEqual(m.writes,[])
+    def test_reference_and_rebuilt_executables_with_matching_layout(self):
+        m, game = self.world()
+        game.verify_build()
+        self.assertEqual(game.status()['buildCompatibility'], 'reference')
+        pe = m.base + 0x168
+        m.u32(m.base + 0x3C, 0x168)
+        m.put(pe, b'PE\0\0\x64\x86')
+        m.put(pe + 24, b'\x0b\x02')
+        m.u32(pe + 8, 0x6AD5E20D)
+        m.u32(pe + 24 + 56, 0x61DB000)
+        game.verify_build()
+        status = game.status()
+        self.assertEqual(status['buildCompatibility'], 'layout_match')
+        self.assertEqual(status['lastTestedVersion'], live.LAST_TESTED_VERSION)
+        self.assertNotIn('gameVersion', status)
+        self.assertEqual(base64.b64decode(game.copy(self.expected())['dna']), m.original)
+        self.assertEqual(m.writes, [])
+        m.put(m.data, b'\xff')
+        with self.assertRaisesRegex(live.LiveGameError, 'DNA-Prüfwert'):
+            game.status()
+
+    def test_changed_markers_refuse_all_operations_before_writing(self):
+        for marker in (0xE764C9, 0xC922E9):
+            m, _ = self.world()
+            m.put(m.base + marker, b'\0')
+            with patch.object(live, 'WindowsMemory', return_value=m):
+                status = live.handle_live('game_status')
+                self.assertFalse(status['ready'])
+                self.assertEqual(status['errorCode'], 'incompatible_layout')
+                self.assertEqual(status['lastTestedVersion'], live.LAST_TESTED_VERSION)
+                for action in ('game_copy', 'game_paste'):
+                    with self.assertRaisesRegex(live.LiveGameError, 'anderes Speicherlayout'):
+                        live.handle_live(action, {'dna': self.changed(m), 'expectedTarget': self.expected()})
+            self.assertEqual(m.writes, [])
+
     def test_status_follows_selection_no_dna_reads(self):
         m,g=self.world();s=g.status();self.assertEqual((s['name'],s['id'],s['geneCount']),('Synthetic Hero',1,104))
         m.select(2);self.assertEqual(g.status()['name'],'Other')
         self.assertFalse(any(a in (m.data,0x510000) for a,n in m.reads));self.assertEqual(m.writes,[])
-        self.assertEqual(set(vars(g)),{'memory','base'})
+        self.assertEqual(set(vars(g)),{'memory','base','exact_tested_build'})
     def test_copy_exact_and_no_retention(self):
         m,g=self.world();s=g.copy(self.expected());self.assertEqual(base64.b64decode(s['dna']),m.original)
-        self.assertEqual(set(vars(g)),{'memory','base'});self.assertEqual(m.writes,[])
+        self.assertEqual(set(vars(g)),{'memory','base','exact_tested_build'});self.assertEqual(m.writes,[])
     def test_stale_or_missing_expected_target_blocks_paste(self):
         for expected in [None,{}, {'pid':42,'id':1}, {'pid':42,'id':2},{'pid':43,'id':1},{'pid':True,'id':1},
                          {'pid':42,'id':1,'selectionToken':'0'*64}, {'pid':42,'id':1,'selectionToken':123}]:
@@ -108,7 +139,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(m.read(m.data,len(m.original)),base64.b64decode(new))
         self.assertEqual(g.u32(m.ch+0x178),live.murmur3(base64.b64decode(new)))
         self.assertEqual([a for a,d in m.writes],[m.data,m.ch+0x178])
-        self.assertEqual(set(vars(g)),{'memory','base'})
+        self.assertEqual(set(vars(g)),{'memory','base','exact_tested_build'})
         self.assertEqual(s['selectionToken'],self.expected()['selectionToken'])
         self.assertEqual(g.status()['selectionToken'],s['selectionToken'])
         self.assertTrue(g.paste(base64.b64encode(m.original).decode(),self.expected())['changed'])

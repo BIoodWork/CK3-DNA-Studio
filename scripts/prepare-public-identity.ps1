@@ -16,6 +16,14 @@ if($count -eq 2 -and $rootMessage -eq 'Initialize Studio repository with private
  git commit -m 'Release Crusader Kings III DNA Studio 1.0.1'
  if($LASTEXITCODE -ne 0){throw 'Cannot create public commit.'}
  $rewrite=$true
+}elseif($message -eq 'Release 1.0.3: check CK3 Gateway layout instead of build metadata'){
+ if($env:GITHUB_ACTOR -ne 'BIoodWork' -or $env:GITHUB_REF -ne 'refs/heads/main' -or (git rev-parse HEAD^).Trim() -ne 'a0b2d16cf7074ac35a60d2301a6095b2762ad30f'){throw 'Unexpected parent or actor for the automation-created release commit.'}
+ $publicEmail='351165458+BIoodWork@users.noreply.github.com'
+ if((git log -1 --format=%ae).Trim() -ne $publicEmail -or (git log -1 --format=%ce).Trim() -ne $publicEmail){
+  git commit --amend --no-edit --reset-author
+  if($LASTEXITCODE -ne 0){throw 'Cannot prepare the public release identity.'}
+  $rewrite=$true
+ }
 }elseif($message -like 'Fix release build:*'){
  if($env:GITHUB_ACTOR -ne 'BIoodWork' -or $count -gt 10 -or $rootMessage -ne 'Release Crusader Kings III DNA Studio 1.0.1'){throw 'Maintenance identity scope differs; no history changed.'}
  $commits=@(git rev-list --reverse "$root..HEAD")

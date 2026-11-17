@@ -186,7 +186,7 @@
   // Placeholders are positional and may contain punctuation, Unicode or newlines.
   const templates = [
     ["Das Porträt für „{name}“ fehlt oder ist beschädigt. Bitte neu auswählen oder entfernen und den Export wiederholen.", "The portrait for “{name}” is missing or corrupt. Select it again or remove it, then retry the export."],
-    ["Dieser CK3-Build ist für den direkten Spielzugriff nicht geprüft. Unterstützt: {versions}.", "This CK3 build has not been verified for direct game access. Supported: {versions}."],
+    ["Der CK3-Build hat ein anderes Speicherlayout. Der Gateway ist für diesen Build nicht verfügbar.", "This CK3 build has a different memory layout. The Gateway is unavailable for this build."],
     ["DNA-Länge passt nicht: {inserted} Bytes eingefügt, {required} benötigt. Nichts wurde geändert.", "DNA length mismatch: pasted {inserted} bytes, {required} required. Nothing was changed."],
     ["DNA von {name} (ID {id}) ersetzt und geprüft. Charakterfenster erneut öffnen.", "Replaced and verified DNA for {name} (ID {id}). Reopen the character window."],
     ["{mode} DNA-Länge passt nicht zu den installierten Definitionen: {expected} Bytes ({genes} Gene) erwartet, {received} erhalten. Es wurden keine Daten abgeschnitten. Ältere DNA bitte als Text-DNA mit Gennamen aus ihrer ursprünglichen Spiel-/Modversion exportieren.", "{mode} DNA length does not match the installed definitions: expected {expected} bytes ({genes} genes), received {received}. No data was truncated. For older DNA, export named text DNA from its original game/mod version."],

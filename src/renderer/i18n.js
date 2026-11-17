@@ -6,6 +6,8 @@ language|Language|Sprache
 library|Library|Bibliothek
 edit|Edit DNA|DNA bearbeiten
 connection|CK3 Gateway|CK3 Gateway
+lastTestedGame|Last tested CK3|Zuletzt getestetes CK3
+newBuildLayoutMatch|This build passed the Gateway layout and DNA checks.|Dieser Build hat die Prüfungen für Speicherlayout und DNA bestanden.
 settings|Settings|Einstellungen
 newDna|New DNA|Neue DNA
 localLibrary|Local library|Lokale Bibliothek

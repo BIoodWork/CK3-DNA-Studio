@@ -11,7 +11,7 @@ const examples = [
   ["Notiz ist ungültig oder zu lang (maximal 2000 Zeichen).", "Note is invalid or too long (maximum 2000 characters)."],
   ["Schema-Informationen enthält einen ungültigen Schlüssel.", "Schema information contains an invalid key."],
   ["Bibliothekseintrag muss ein Objekt sein.", "Library entry must be an object."],
-  ["Dieser CK3-Build ist für den direkten Spielzugriff nicht geprüft. Unterstützt: 1.20.1.2 / Steam 26046173.", "This CK3 build has not been verified for direct game access. Supported: 1.20.1.2 / Steam 26046173."],
+  ["Der CK3-Build hat ein anderes Speicherlayout. Der Gateway ist für diesen Build nicht verfügbar.", "This CK3 build has a different memory layout. The Gateway is unavailable for this build."],
   ["DNA-Länge passt nicht: 512 Bytes eingefügt, 520 benötigt. Nichts wurde geändert.", "DNA length mismatch: pasted 512 bytes, 520 required. Nothing was changed."],
   ["DNA von König Ägir 'the Bold' $& (ID 1012) ersetzt und geprüft. Charakterfenster erneut öffnen.", "Replaced and verified DNA for König Ägir 'the Bold' $& (ID 1012). Reopen the character window."],
   ["EPE DNA-Länge passt nicht zu den installierten Definitionen: 520 Bytes (130 Gene) erwartet, 516 erhalten. Es wurden keine Daten abgeschnitten. Ältere DNA bitte als Text-DNA mit Gennamen aus ihrer ursprünglichen Spiel-/Modversion exportieren.", "EPE DNA length does not match the installed definitions: expected 520 bytes (130 genes), received 516. No data was truncated. For older DNA, export named text DNA from its original game/mod version."],

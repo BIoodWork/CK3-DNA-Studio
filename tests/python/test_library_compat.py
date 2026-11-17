@@ -33,6 +33,9 @@ class Checks(unittest.TestCase):
   details=result['compatibilityDetails'];self.assertEqual(details['savedProfile'],'none');self.assertEqual(details['currentProfile'],'none')
   self.assertEqual(details['geneDefinitions']['status'],'match');self.assertEqual(details['palettes']['status'],'match')
   self.assertFalse(details['configuration']['runningModsVerified']);self.assertTrue(details['configuration']['caveat'])
+ def test_game_version_label_alone_does_not_invalidate_identical_definitions(self):
+  self.e['schemaInfo']['target']['gameVersion']='older-version'
+  self.assertTrue(self.runcheck()['compatible'])
  def test_stale(self):self.target['id']=3;self.assertFalse(self.runcheck()['compatible'])
  def test_missing_or_stale_token(self):
   for token in (None,'b'*64,'bad',12):

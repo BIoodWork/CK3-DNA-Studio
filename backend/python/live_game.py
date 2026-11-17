@@ -1,4 +1,4 @@
-"""Bounded CK3 1.20.1.2 memory access; no hooks or retained DNA backups."""
+"""Bounded CK3 memory access for the layout last tested on 1.20.1.2."""
 from __future__ import annotations
 
 import base64
@@ -15,8 +15,8 @@ import struct
 import time
 from typing import Any
 
-SUPPORTED_VERSION = "1.20.1.2"
-STEAM_BUILD = "26046173"
+LAST_TESTED_VERSION = "1.20.1.2"
+LAST_TESTED_STEAM_BUILD = "26046173"
 MASK = 0xFFFFFFFF
 # Process-local identity proof. It contains no DNA and is never persisted.
 _SELECTION_SECRET = secrets.token_bytes(32)
@@ -200,8 +200,7 @@ class Character:
     def public(self) -> dict[str, Any]:
         return {"connected": True, "ready": True, "pid": self.pid, "id": self.id, "name": self.name,
                 "selectionToken": self.selection_token(),
-                "geneCount": self.gene_count, "byteCount": self.gene_count * 4,
-                "gameVersion": SUPPORTED_VERSION, "steamBuild": STEAM_BUILD}
+                "geneCount": self.gene_count, "byteCount": self.gene_count * 4}
 
     def selection_token(self) -> str:
         # Exclude the mutable DNA hash so successful writes preserve identity.
@@ -214,6 +213,7 @@ class LiveGame:
     def __init__(self, memory):
         self.memory = memory
         self.base = memory.base
+        self.exact_tested_build = True
 
     def u32(self, address: int) -> int:
         return struct.unpack("<I", self.memory.read(address, 4))[0]
@@ -236,13 +236,32 @@ class LiveGame:
         return self.cstring(self.base + self.u32(col + 12) + 16, 128)
 
     def verify_build(self) -> None:
-        if (self.memory.read(self.base, 2) != b"MZ" or self.u32(self.base + 0x3C) != 0x158
-                or self.memory.read(self.base + 0x158, 4) != b"PE\0\0"
-                or self.u32(self.base + 0x160) != 0x6AD5E20C
-                or self.u32(self.base + 0x1A8) != 0x61DA000
+        incompatible = LiveGameError(
+            "Der CK3-Build hat ein anderes Speicherlayout. Der Gateway ist für diesen Build nicht verfügbar.",
+            "incompatible_layout",
+        )
+        if self.memory.read(self.base, 2) != b"MZ":
+            raise incompatible
+        pe_offset = self.u32(self.base + 0x3C)
+        if not 0x40 <= pe_offset <= 0x1000:
+            raise incompatible
+        pe = self.base + pe_offset
+        if (self.memory.read(pe, 6) != b"PE\0\0\x64\x86"
+                or self.memory.read(pe + 24, 2) != b"\x0b\x02"):
+            raise incompatible
+        image_size = self.u32(pe + 24 + 56)
+        if (image_size < 0x5CCD810
                 or self.memory.read(self.base + 0xE764C9, 16) != bytes.fromhex("41 8b 40 18 49 8b e8 48 8b fa 4c 8b f1 39 41 18")
                 or self.memory.read(self.base + 0xC922E9, 7) != bytes.fromhex("48 81 c1 60 01 00 00")):
-            raise LiveGameError("Dieser CK3-Build ist für den direkten Spielzugriff nicht geprüft. Unterstützt: 1.20.1.2 / Steam 26046173.", "unsupported_build")
+            raise incompatible
+        # Build metadata labels the reference release. It does not decide compatibility.
+        self.exact_tested_build = (pe_offset == 0x158 and image_size == 0x61DA000
+                                   and self.u32(pe + 8) == 0x6AD5E20C)
+
+    def public_selection(self, character: Character) -> dict[str, Any]:
+        return {**character.public(), "lastTestedVersion": LAST_TESTED_VERSION,
+                "lastTestedSteamBuild": LAST_TESTED_STEAM_BUILD,
+                "buildCompatibility": "reference" if self.exact_tested_build else "layout_match"}
 
     def selected(self) -> Character:
         app = self.pointer(self.base + 0x5CCD808)
@@ -300,8 +319,12 @@ class LiveGame:
             raise LiveGameError("Der ausgewählte Charakter hat sich geändert. Die Anzeige kurz aktualisieren lassen und erneut klicken.", "selection_changed")
 
     def status(self) -> dict[str, Any]:
-        # Deliberately no read of the raw gene buffer here.
-        return self.selected().public()
+        if self.exact_tested_build:
+            return self.public_selection(self.selected())
+        selected, _ = self.snapshot()
+        if self.selected().target_key() != selected.target_key():
+            raise LiveGameError("Die Charakterauswahl hat sich geändert.", "selection_changed")
+        return self.public_selection(selected)
 
     def copy(self, expected: Any = None) -> dict[str, Any]:
         selected, raw = self.snapshot()
@@ -309,7 +332,7 @@ class LiveGame:
             self.check_expected(selected, expected)
         if self.selected().target_key() != selected.target_key():
             raise LiveGameError("Die Charakterauswahl hat sich geändert.", "selection_changed")
-        return {**selected.public(), "dna": base64.b64encode(raw).decode("ascii")}
+        return {**self.public_selection(selected), "dna": base64.b64encode(raw).decode("ascii")}
 
     def _same_object(self, selected: Character) -> bool:
         ch = selected.character
@@ -324,7 +347,7 @@ class LiveGame:
         if len(new) != len(original):
             raise LiveGameError(f"DNA-Länge passt nicht: {len(new)} Bytes eingefügt, {len(original)} benötigt. Nichts wurde geändert.", "length_mismatch")
         if new == original:
-            return {**selected.public(), "changed": False, "message": "Die DNA ist bereits identisch."}
+            return {**self.public_selection(selected), "changed": False, "message": "Die DNA ist bereits identisch."}
         current, current_raw = self.snapshot()
         if current.target_key() != selected.target_key() or current.hash != selected.hash or current_raw != original:
             raise LiveGameError("Auswahl oder DNA hat sich geändert. Erneut versuchen.", "selection_changed")
@@ -356,7 +379,7 @@ class LiveGame:
             if restored:
                 raise LiveGameError(f"{exc} Die ursprüngliche DNA wurde wiederhergestellt.", "write_rolled_back") from exc
             raise LiveGameError(f"{exc} Wiederherstellung nicht bestätigt! Spielstand NICHT speichern; Spielstand erneut laden.", "rollback_failed") from exc
-        return {**selected.public(), "changed": True,
+        return {**self.public_selection(selected), "changed": True,
                 "message": f"DNA von {selected.name} (ID {selected.id}) ersetzt und geprüft. Charakterfenster erneut öffnen."}
 
 
@@ -377,5 +400,5 @@ def handle_live(action: str, payload: dict[str, Any] | None = None) -> dict[str,
         if action == "game_status":
             return {"connected": exc.code not in {"not_running", "process_unavailable", "access_denied", "not_windows"},
                     "ready": False, "message": str(exc), "errorCode": exc.code,
-                    "gameVersion": SUPPORTED_VERSION, "steamBuild": STEAM_BUILD}
+                    "lastTestedVersion": LAST_TESTED_VERSION, "lastTestedSteamBuild": LAST_TESTED_STEAM_BUILD}
         raise

@@ -87,7 +87,6 @@ def check_entry(entry,expected):
         palettes['status']='missing' if not valid else 'match' if all(saved[g]==digest for g,digest in palettes['current'].items()) else 'changed'
         if entry.get('profile')!=mode:return no('Das gespeicherte Zielprofil passt nicht zur aktiven Mod-Zusammenstellung. Bitte neu konvertieren.')
         if info.get('fingerprint')!=schema.fingerprint:return no('Die Gen-Definitionen haben sich geändert oder fehlen im Eintrag. Bitte erneut konvertieren.')
-        if info.get('gameVersion')!=schema.game_version:return no('Die gespeicherte Spielversion weicht ab. Bitte erneut konvertieren.')
         if palettes['status']=='missing':return no('Historische Farbpaletten-Prüfsummen fehlen. Bitte die gespeicherte DNA im Konverter erneut prüfen und als neuen Eintrag speichern.')
         if palettes['status']=='changed':return no('Die Farbpaletten haben sich seit dem Speichern geändert. Bitte den gespeicherten Originalinhalt laden und erneut konvertieren.')
         decode_current(entry.get('dna',''),schema)
