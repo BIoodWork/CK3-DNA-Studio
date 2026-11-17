@@ -37,6 +37,7 @@ jobs:
       - name: Install development dependencies
         run: |
           npm ci
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m pip install -r requirements-build.txt
       - name: Check Node regressions
         run: npm run test -- --node
