@@ -1,4 +1,4 @@
-"""Bounded CK3 memory access for the layout last tested on 1.20.1.2."""
+"""Bounded CK3 memory access for verified executable layouts."""
 from __future__ import annotations
 
 import base64
@@ -15,11 +15,50 @@ import struct
 import time
 from typing import Any
 
-LAST_TESTED_VERSION = "1.20.1.2"
-LAST_TESTED_STEAM_BUILD = "26046173"
+LAST_TESTED_VERSION = "1.21.0"
+LAST_TESTED_STEAM_BUILD = "26622941"
 MASK = 0xFFFFFFFF
 # Process-local identity proof. It contains no DNA and is never persisted.
 _SELECTION_SECRET = secrets.token_bytes(32)
+
+
+@dataclass(frozen=True)
+class GameLayout:
+    version: str
+    reference_header: tuple[int, int, int]
+    app_global: int
+    interface_global: int
+    character_db_global: int
+    markers: tuple[tuple[int, bytes], ...]
+
+    @property
+    def min_image_size(self) -> int:
+        return max(self.app_global + 8, self.interface_global + 8,
+                   self.character_db_global + 8,
+                   *(address + len(data) for address, data in self.markers))
+
+
+LAYOUT_120 = GameLayout(
+    "1.20.1.2", (0x158, 0x6AD5E20C, 0x61DA000),
+    0x5CCD808, 0x5C7F4B8, 0x5C7C4F0,
+    (
+        (0xE764C9, bytes.fromhex("41 8b 40 18 49 8b e8 48 8b fa 4c 8b f1 39 41 18")),
+        (0xC922E9, bytes.fromhex("48 81 c1 60 01 00 00")),
+    ),
+)
+LAYOUT_121 = GameLayout(
+    "1.21.0", (0x168, 0x6AF5E8D0, 0x6FE5000),
+    0x6A640B8, 0x68B3800, 0x68A8628,
+    (
+        # The in-game context accessor checks the state and reads the interface.
+        (0xB2C7D4, bytes.fromhex("488b05dd78f30583b8c8010000047549488b0d1570d805")),
+        (0xEAE255, bytes.fromhex("488b35cca39f05488bf8488b1dcaa39f05")),
+        # The adjacent accessors refer to the DNA and cached checksum fields.
+        (0x487BED0, bytes.fromhex("488b8a600000004881c160010000e9bdc304fc")),
+        (0x487BEF0, bytes.fromhex("488b8a600000004881c178010000e99dc304fc")),
+    ),
+)
+GAME_LAYOUTS = (LAYOUT_121, LAYOUT_120)
 
 
 class LiveGameError(RuntimeError):
@@ -213,6 +252,7 @@ class LiveGame:
     def __init__(self, memory):
         self.memory = memory
         self.base = memory.base
+        self.layout = LAYOUT_120
         self.exact_tested_build = True
 
     def u32(self, address: int) -> int:
@@ -250,24 +290,32 @@ class LiveGame:
                 or self.memory.read(pe + 24, 2) != b"\x0b\x02"):
             raise incompatible
         image_size = self.u32(pe + 24 + 56)
-        if (image_size < 0x5CCD810
-                or self.memory.read(self.base + 0xE764C9, 16) != bytes.fromhex("41 8b 40 18 49 8b e8 48 8b fa 4c 8b f1 39 41 18")
-                or self.memory.read(self.base + 0xC922E9, 7) != bytes.fromhex("48 81 c1 60 01 00 00")):
-            raise incompatible
-        # Build metadata labels the reference release. It does not decide compatibility.
-        self.exact_tested_build = (pe_offset == 0x158 and image_size == 0x61DA000
-                                   and self.u32(pe + 8) == 0x6AD5E20C)
+        for layout in GAME_LAYOUTS:
+            if image_size < layout.min_image_size:
+                continue
+            try:
+                matches = all(self.memory.read(self.base + address, len(data)) == data
+                              for address, data in layout.markers)
+            except LiveGameError:
+                continue
+            if matches:
+                self.layout = layout
+                # Build metadata identifies the reference but does not gate compatibility.
+                self.exact_tested_build = (pe_offset, self.u32(pe + 8), image_size) == layout.reference_header
+                return
+        raise incompatible
 
     def public_selection(self, character: Character) -> dict[str, Any]:
         return {**character.public(), "lastTestedVersion": LAST_TESTED_VERSION,
                 "lastTestedSteamBuild": LAST_TESTED_STEAM_BUILD,
+                "referenceLayoutVersion": self.layout.version,
                 "buildCompatibility": "reference" if self.exact_tested_build else "layout_match"}
 
     def selected(self) -> Character:
-        app = self.pointer(self.base + 0x5CCD808)
+        app = self.pointer(self.base + self.layout.app_global)
         if self.u32(app + 0x1C8) != 4:
             raise LiveGameError("Zuerst einen CK3-Spielstand laden.", "no_game")
-        holder = self.pointer(self.base + 0x5C7F4B8)
+        holder = self.pointer(self.base + self.layout.interface_global)
         interface = self.pointer(holder + 0x10)
         if self.type_name(interface) != ".?AVCIngameInterfaceIdlerGfx@@":
             raise LiveGameError("Die Spieloberfläche ist noch nicht verfügbar.", "no_game")
@@ -278,7 +326,7 @@ class LiveGame:
         cid = self.u32(window + 0xC8)
         if cid == MASK:
             raise LiveGameError("Kein Charakter ausgewählt.", "no_selection")
-        db = self.pointer(self.base + 0x5C7C4F0)
+        db = self.pointer(self.base + self.layout.character_db_global)
         index = cid & 0xFFFFFF
         if index >= self.u32(db + 0x2C):
             raise LiveGameError("Die Charakterauswahl hat sich geändert.", "selection_changed")

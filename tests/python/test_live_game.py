@@ -84,6 +84,40 @@ class Tests(unittest.TestCase):
         with self.assertRaisesRegex(live.LiveGameError, 'DNA-Prüfwert'):
             game.status()
 
+    def test_121_layout_routes_copy_and_paste_via_the_new_globals(self):
+        m = Memory()
+        old, new = live.LAYOUT_120, live.LAYOUT_121
+        pe_offset, timestamp, image_size = new.reference_header
+        pe = m.base + pe_offset
+        m.u32(m.base + 0x3C, pe_offset)
+        m.put(pe, b'PE\0\0\x64\x86')
+        m.put(pe + 24, b'\x0b\x02')
+        m.u32(pe + 8, timestamp)
+        m.u32(pe + 24 + 56, image_size)
+        for rva, data in new.markers:
+            m.put(m.base + rva, data)
+        for old_rva, new_rva in ((old.app_global, new.app_global),
+                                 (old.interface_global, new.interface_global),
+                                 (old.character_db_global, new.character_db_global)):
+            m.put(m.base + new_rva, m.read(m.base + old_rva, 8))
+            m.u64(m.base + old_rva, 0)
+        with patch.object(live, 'WindowsMemory', return_value=m):
+            self.target = live.handle_live('game_status')
+            self.assertEqual(self.target['referenceLayoutVersion'], '1.21.0')
+            self.assertEqual(self.target['buildCompatibility'], 'reference')
+            copied = live.handle_live('game_copy', {'expectedTarget': self.expected()})
+            self.assertEqual(base64.b64decode(copied['dna']), m.original)
+            updated = live.handle_live('game_paste', {'dna': self.changed(m), 'expectedTarget': self.expected()})
+            self.assertTrue(updated['changed'])
+            m.u32(pe + 8, timestamp + 1)
+            self.assertEqual(live.handle_live('game_status')['buildCompatibility'], 'layout_match')
+            address, marker = new.markers[-1]
+            m.put(m.base + address, bytes(len(marker)))
+            # Neither layout may be selected if the signatures do not match.
+            address, marker = old.markers[0]
+            m.put(m.base + address, bytes(len(marker)))
+            self.assertEqual(live.handle_live('game_status')['errorCode'], 'incompatible_layout')
+
     def test_changed_markers_refuse_all_operations_before_writing(self):
         for marker in (0xE764C9, 0xC922E9):
             m, _ = self.world()
@@ -102,10 +136,10 @@ class Tests(unittest.TestCase):
         m,g=self.world();s=g.status();self.assertEqual((s['name'],s['id'],s['geneCount']),('Synthetic Hero',1,104))
         m.select(2);self.assertEqual(g.status()['name'],'Other')
         self.assertFalse(any(a in (m.data,0x510000) for a,n in m.reads));self.assertEqual(m.writes,[])
-        self.assertEqual(set(vars(g)),{'memory','base','exact_tested_build'})
+        self.assertEqual(set(vars(g)),{'memory','base','layout','exact_tested_build'})
     def test_copy_exact_and_no_retention(self):
         m,g=self.world();s=g.copy(self.expected());self.assertEqual(base64.b64decode(s['dna']),m.original)
-        self.assertEqual(set(vars(g)),{'memory','base','exact_tested_build'});self.assertEqual(m.writes,[])
+        self.assertEqual(set(vars(g)),{'memory','base','layout','exact_tested_build'});self.assertEqual(m.writes,[])
     def test_stale_or_missing_expected_target_blocks_paste(self):
         for expected in [None,{}, {'pid':42,'id':1}, {'pid':42,'id':2},{'pid':43,'id':1},{'pid':True,'id':1},
                          {'pid':42,'id':1,'selectionToken':'0'*64}, {'pid':42,'id':1,'selectionToken':123}]:
@@ -139,7 +173,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(m.read(m.data,len(m.original)),base64.b64decode(new))
         self.assertEqual(g.u32(m.ch+0x178),live.murmur3(base64.b64decode(new)))
         self.assertEqual([a for a,d in m.writes],[m.data,m.ch+0x178])
-        self.assertEqual(set(vars(g)),{'memory','base','exact_tested_build'})
+        self.assertEqual(set(vars(g)),{'memory','base','layout','exact_tested_build'})
         self.assertEqual(s['selectionToken'],self.expected()['selectionToken'])
         self.assertEqual(g.status()['selectionToken'],s['selectionToken'])
         self.assertTrue(g.paste(base64.b64encode(m.original).decode(),self.expected())['changed'])

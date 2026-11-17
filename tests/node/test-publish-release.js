@@ -134,3 +134,67 @@ test('existing releases, failed visibility checks and absent workflow credential
   assert.deepEqual(unauthenticated.calls, []);
   assert.deepEqual(unauthenticated.writes, []);
 });
+
+test('v1.0.3 replacement keeps the public file names and verifies staged assets before renaming', async () => {
+  const prefix = '/repos/BIoodWork/CK3-DNA-Studio';
+  const installerName = 'Crusader.Kings.III.DNA.Studio.Setup.1.0.3.exe';
+  const oldTag = 'ce2ccacb44e1afda38b87a1c27eadd227fae2427';
+  for (const corrupt of [false, true]) {
+    const originalAssets = [
+      { id: 760377454, name: installerName },
+      { id: 760377635, name: 'SHA256SUMS.txt' }
+    ];
+    const assets = new Map(originalAssets.map(asset => [asset.id, { ...asset }]));
+    const release = { id: 42, assets: originalAssets, upload_url: 'https://example.invalid/assets{?name}', body: 'previous' };
+    const installer = Buffer.from('prepared Windows installer');
+    const checksum = sha256(installer).slice(7);
+    const target = 'b'.repeat(40);
+    let tag = oldTag;
+    let body = release.body;
+    let upload = 0;
+    const api = async (route, options) => {
+      if (route === prefix + '/git/refs/tags/v1.0.3') {
+        if (options) tag = JSON.parse(options.body).sha;
+        return { object: { sha: tag } };
+      }
+      if (route === prefix + '/releases/42') {
+        body = JSON.parse(options.body).body;
+        return { assets: [...assets.values()] };
+      }
+      const asset = assets.get(Number(route.split('/').at(-1)));
+      assert.ok(asset);
+      asset.name = JSON.parse(options.body).name;
+      return asset;
+    };
+    const fetch = async (url, options) => {
+      if (options.method === 'DELETE') {
+        assert.ok(assets.delete(Number(url.split('/').at(-1))));
+        return { ok: true };
+      }
+      const name = new URL(url).searchParams.get('name');
+      const id = ++upload;
+      if (id === 2) assert.equal(options.body.toString(), checksum + '  ' + installerName + '\n');
+      const digest = corrupt && id === 2 ? 'bad-digest' : sha256(options.body);
+      const asset = { id, name, digest, size: options.body.length };
+      assets.set(id, { ...asset });
+      return { ok: true, json: async () => asset };
+    };
+    const context = {
+      args: { api, prefix, release, setup: 'test.exe', checksum, body: 'updated', headers: {} },
+      require: name => name === 'node:fs' ? { readFileSync: () => installer } : require(name),
+      fetch, Buffer, process: { env: { GITHUB_SHA: target } }, console: { log() {} }
+    };
+    vm.runInNewContext(publisher.replace(entrypoint, 'globalThis.runResult = replace103(args);'), context);
+    if (corrupt) {
+      await assert.rejects(context.runResult, /did not match the local build/);
+      assert.deepEqual([...assets.values()], originalAssets);
+      assert.equal(tag, oldTag);
+      assert.equal(body, 'previous');
+    } else {
+      await context.runResult;
+      assert.deepEqual([...assets.values()].map(asset => [asset.id, asset.name]), [[1, installerName], [2, 'SHA256SUMS.txt']]);
+      assert.equal(tag, target);
+      assert.equal(body, 'updated');
+    }
+  }
+});

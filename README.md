@@ -37,7 +37,7 @@ Attached portraits are reference images. Studio does not render a new character 
 
 Use 64-bit Windows. The library can be used without CK3 running or installed. Recognition, editing, palette selection and conversion require the matching game/mod definitions from a local installation. Studio reads those files at runtime; it does not include CK3, EPE or AGOT assets. Automatic discovery can be overridden in Settings.
 
-The last tested build for direct game access is **CK3 1.20.1.2, Steam build 26046173**. Other Windows builds can use the Gateway when the known executable layout and in-game DNA checks still match. **CK3 1.21.0 changes that layout and is currently incompatible with the Gateway.** Pause the game and open its normal character window before using the Gateway. The selected character and compatibility are checked again before applying DNA.
+The last tested build for direct game access is **CK3 1.21.0, Steam build 26622941**. The Gateway also supports the earlier **CK3 1.20.1.2, Steam build 26046173** layout. Other Windows builds can use the Gateway when a known executable layout and the in-game DNA checks still match. Pause the game and open its normal character window before using the Gateway. The selected character and compatibility are checked again before applying DNA.
 
 A detected profile is a match against installed definitions, not proof of the input's historical game/mod version. Ambiguous input requires a source choice. Unsupported originals can be archived without claiming they are editable or compatible. Unknown named fields remain read-only; some genomes cannot be represented as Base64 without losing information.
 
